@@ -12,29 +12,61 @@
    ma_debai = toya03bainopmauflaskapiapp
 """
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+import requests
 import os
 #
 from src.helper import github_request
 
-
 app = Flask(__name__)
 
+port = int(os.environ.get("PORT", 5000))
 
-@app.route('/')
+
+@app.route("/", methods=["GET"])
 def index():
-  pass#todo
+  return jsonify({})
 
 
-@app.route('/release')
+@app.route('/release', methods=["GET"])
 def release():
-  pass#todo
+  url = "https://api.github.com/repos/pyenv/pyenv/releases"
+  response = requests.get(url)
+  if response.status_code == 200:
+    releases = response.json()
+    result = []
+    for release in releases:
+      release_info = {
+          "created_at": release["created_at"],
+          "tag_name": release["tag_name"],
+          "body": release["body"],
+      }
+      result.append(release_info)
+    return jsonify(result)
+  else:
+    return jsonify({}), 404
 
 
-@app.route('/most_3_recent/release')
+@app.route('/most_3_recent/release', methods=["GET"])
 def most_3_recent__release():
-  pass#todo
+  url = "https://api.github.com/repos/pyenv/pyenv/releases"
+  response = requests.get(url)
+  if response.status_code == 200:
+    releases = response.json()
+    releases.sort(key=lambda x: x["created_at"], reverse=True)
+    most_recent_releases = releases[:3]
+    result = []
+    for release in most_recent_releases:
+      release_info = {
+          "created_at": release["created_at"],
+          "tag_name": release["tag_name"],
+          "body": release["body"],
+      }
+      result.append(release_info)
+    return jsonify(result)
+  else:
+    return jsonify({}), 404
 
 
-if __name__=='__main__':
-  app.run(debug=True, port=os.environ.get('PORT', 5000) )
+if __name__ == '__main__':
+  app.run(debug=True, port=os.environ.get('PORT', 5000))
